@@ -49,7 +49,7 @@ local function init()
 	local input_IsKeyDown = input.IsKeyDown
 	local render_SetMaterial = render.SetMaterial
 	local render_DrawQuadEasy = render.DrawQuadEasy
-	local cam_IgnoreZ = cam.IgnoreZ
+	local render_DepthRange = render.DepthRange
 	local cam_PushModelMatrix = cam.PushModelMatrix
 	local cam_PopModelMatrix = cam.PopModelMatrix
 
@@ -101,7 +101,7 @@ local function init()
 
 			color_pano.a = viewing and 255 or (time - focusTime) * 255 / FOCUS_LEN
 
-			cam_IgnoreZ(true)
+			render_DepthRange(-1, 0)
 			cam_PushModelMatrix(matrix_pano)
 			local closestIndex = closest.index
 			for i = 1, 6 do
@@ -110,7 +110,7 @@ local function init()
 				render_DrawQuadEasy(norms_pano[i] * -5, norms_pano[i], 10, 10, color_pano, i ~= 1 and i ~= 6 and 180 or 0)
 			end
 			cam_PopModelMatrix()
-			cam_IgnoreZ(false)
+			render_DepthRange(0, 1)
 		end
 	end
 
