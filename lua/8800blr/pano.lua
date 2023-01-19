@@ -122,5 +122,3 @@ hook.Add("Initialize", "8800blr_pano_init", function()
 		init()
 	end
 end)
-
-init()
