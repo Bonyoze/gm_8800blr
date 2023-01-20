@@ -1,5 +1,9 @@
 local function init()
+	local EyePos = EyePos
+	local EyeVector = EyeVector
+	local SysTime = SysTime
 	local LocalPlayer = LocalPlayer
+	local ClientsideModel = ClientsideModel
 	local table_sort = table.sort
 	local string_format = string.format
 	local gui_IsGameUIVisible = gui.IsGameUIVisible
