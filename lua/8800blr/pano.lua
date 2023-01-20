@@ -10,6 +10,7 @@ local function init()
 	local render_SetBlend = render.SetBlend
 
 	local function loadData()
+		-- panorama position and angle info is stored in its own binary data format
 		local f = file.Open("8800blr/pano.dat.lua", "rb", "LUA")
 
 		local total, data = f:ReadUShort(), {}
@@ -78,7 +79,7 @@ local function init()
 			viewing = false
 		end
 
-		-- draw icons
+		-- draw panorama icons
 		if not viewing then
 			render_SetMaterial(iconMat)
 			for i = PANO_TOTAL, 1, -1 do
@@ -86,21 +87,20 @@ local function init()
 			end
 		end
 
-		-- draw panorama
+		-- draw panorama model
 		if viewing or focusing then
 			local index = closest.index
-			if index ~= lastIndex then -- update pano textures
+			if index ~= lastIndex then -- update textures used by the panorama model
 				for i = 1, 6 do
 					panoMats[i]:SetTexture("$basetexture", string_format("8800blr/pano/%03d_%d", index - 1, i - 1))
 				end
 			end
 			lastIndex = index
 
-			-- draw pano model
 			local pano = ClientsideModel("models/8800blr/panorama.mdl")
 			pano:SetPos(eyePos)
 			pano:SetAngles(closest.ang)
-			render_SetBlend(viewing and 1 or (time - focusTime) / FOCUS_LEN)
+			render_SetBlend(viewing and 1 or (time - focusTime) / FOCUS_LEN) -- fade in effect
 			pano:DrawModel()
 			render_SetBlend(1)
 			pano:Remove()
