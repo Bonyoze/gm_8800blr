@@ -7,6 +7,9 @@ local function init()
 	local input_IsKeyDown = input.IsKeyDown
 	local render_SetMaterial = render.SetMaterial
 	local render_DrawQuadEasy = render.DrawQuadEasy
+	local render_GetColorModulation = render.GetColorModulation
+	local render_GetBlend = render.GetBlend
+	local render_SetColorModulation = render.SetColorModulation
 	local render_SetBlend = render.SetBlend
 
 	local function loadData()
@@ -100,9 +103,13 @@ local function init()
 			local pano = ClientsideModel("models/8800blr/panorama.mdl")
 			pano:SetPos(eyePos)
 			pano:SetAngles(closest.ang)
+			local r, g, b = render_GetColorModulation()
+			local blend = render_GetBlend()
+			render_SetColorModulation(1, 1, 1)
 			render_SetBlend(viewing and 1 or (time - focusTime) / FOCUS_LEN) -- fade in effect
 			pano:DrawModel()
-			render_SetBlend(1)
+			render_SetColorModulation(r, g, b)
+			render_SetBlend(blend)
 			pano:Remove()
 		end
 	end
