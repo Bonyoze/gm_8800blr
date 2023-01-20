@@ -1,6 +1,5 @@
 local function init()
 	local LocalPlayer = LocalPlayer
-	local table_insert = table.insert
 	local table_sort = table.sort
 	local string_format = string.format
 	local gui_IsGameUIVisible = gui.IsGameUIVisible
@@ -18,11 +17,11 @@ local function init()
 		for i = 1, total do
 			local pX, pY, pZ = f:ReadFloat(), f:ReadFloat(), f:ReadFloat()
 			local aX, aY, aZ = f:ReadFloat(), f:ReadFloat(), f:ReadFloat()
-			table_insert(data, {
+			data[i] = {
 				index = i,
 				pos = Vector(pX, pY, pZ),
 				ang = Angle(aX, aY, aZ)
-			})
+			}
 		end
 
 		return total, data
@@ -38,11 +37,12 @@ local function init()
 	local focusTime
 	local oldKey
 	local currKey
+	local lastIndex
 
-	local icon = Material("8800blr/pano_icon.png", "smooth")
-	local faces = {}
+	local iconMat = Material("8800blr/pano_icon.png", "smooth")
+	local panoMats = {}
 	for i = 1, 6 do
-		table_insert(faces, CreateMaterial("8800blr_pano_" .. i, "UnlitGeneric", { ["$ignorez"] = 1 }))
+		panoMats[i] = Material("8800blr/pano_" .. (i - 1))
 	end
 
 	local function draw()
@@ -80,7 +80,7 @@ local function init()
 
 		-- draw icons
 		if not viewing then
-			render_SetMaterial(icon)
+			render_SetMaterial(iconMat)
 			for i = PANO_TOTAL, 1, -1 do
 				render_DrawQuadEasy(PANO_DATA[i].pos, -eyeVector, 16, 16, color_white, 180)
 			end
@@ -88,18 +88,22 @@ local function init()
 
 		-- draw panorama
 		if viewing or focusing then
-			local csm = ClientsideModel("models/8800blr/panorama.mdl")
-			csm:SetPos(eyePos)
-			csm:SetAngles(closest.ang)
-			local closestIndex = closest.index
-			for i = 1, 6 do
-				faces[i]:SetTexture("$basetexture", string_format("8800blr/pano/%03d_%d", closestIndex - 1, i - 1))
-				csm:SetSubMaterial(i - 1, "!8800blr_pano_" .. i)
+			local index = closest.index
+			if index ~= lastIndex then -- update pano textures
+				for i = 1, 6 do
+					panoMats[i]:SetTexture("$basetexture", string_format("8800blr/pano/%03d_%d", index - 1, i - 1))
+				end
 			end
+			lastIndex = index
+
+			-- draw pano model
+			local pano = ClientsideModel("models/8800blr/panorama.mdl")
+			pano:SetPos(eyePos)
+			pano:SetAngles(closest.ang)
 			render_SetBlend(viewing and 1 or (time - focusTime) / FOCUS_LEN)
-			csm:DrawModel()
+			pano:DrawModel()
 			render_SetBlend(1)
-			csm:Remove()
+			pano:Remove()
 		end
 	end
 
