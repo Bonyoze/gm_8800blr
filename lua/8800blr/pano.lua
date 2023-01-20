@@ -1,22 +1,33 @@
-local function loadData()
-	local f = file.Open("8800blr/pano.dat.lua", "rb", "LUA")
+local function init()
+	local LocalPlayer = LocalPlayer
+	local table_insert = table.insert
+	local table_sort = table.sort
+	local string_format = string.format
+	local gui_IsGameUIVisible = gui.IsGameUIVisible
+	local vgui_GetKeyboardFocus = vgui.GetKeyboardFocus
+	local input_IsKeyDown = input.IsKeyDown
+	local render_SetMaterial = render.SetMaterial
+	local render_DrawQuadEasy = render.DrawQuadEasy
+	local render_SetBlend = render.SetBlend
 
-	local total, data = f:ReadUShort(), {}
+	local function loadData()
+		local f = file.Open("8800blr/pano.dat.lua", "rb", "LUA")
 
-	for i = 1, total do
-		local pX, pY, pZ = f:ReadFloat(), f:ReadFloat(), f:ReadFloat()
-		local aX, aY, aZ = f:ReadFloat(), f:ReadFloat(), f:ReadFloat()
-		table.insert(data, {
-			index = i,
-			pos = Vector(pX, pY, pZ),
-			ang = Angle(aX, aY, aZ)
-		})
+		local total, data = f:ReadUShort(), {}
+
+		for i = 1, total do
+			local pX, pY, pZ = f:ReadFloat(), f:ReadFloat(), f:ReadFloat()
+			local aX, aY, aZ = f:ReadFloat(), f:ReadFloat(), f:ReadFloat()
+			table_insert(data, {
+				index = i,
+				pos = Vector(pX, pY, pZ),
+				ang = Angle(aX, aY, aZ)
+			})
+		end
+
+		return total, data
 	end
 
-	return total, data
-end
-
-local function init()
 	local PANO_TOTAL, PANO_DATA = loadData()
 	local FOCUS_LEN = 0.5
 	local FOCUS_DIST = 1000
@@ -28,30 +39,11 @@ local function init()
 	local oldKey
 	local currKey
 
-	local mat_icon = Material("8800blr/pano_icon.png", "smooth")
-	local mat_pano = CreateMaterial("8800blr_pano", "UnlitGeneric", { ["$vertexalpha"] = 1 })
-	local norms_pano = {
-		Vector(0, 0, -1),
-		Vector(-1, 0, 0),
-		Vector(0, 1, 0),
-		Vector(1, 0, 0),
-		Vector(0, -1, 0),
-		Vector(0, 0, 1)
-	}
-	local color_pano = Color(255, 255, 255)
-	local matrix_pano = Matrix()
-
-	local LocalPlayer = LocalPlayer
-	local table_sort = table.sort
-	local string_format = string.format
-	local gui_IsGameUIVisible = gui.IsGameUIVisible
-	local vgui_GetKeyboardFocus = vgui.GetKeyboardFocus
-	local input_IsKeyDown = input.IsKeyDown
-	local render_SetMaterial = render.SetMaterial
-	local render_DrawQuadEasy = render.DrawQuadEasy
-	local render_DepthRange = render.DepthRange
-	local cam_PushModelMatrix = cam.PushModelMatrix
-	local cam_PopModelMatrix = cam.PopModelMatrix
+	local icon = Material("8800blr/pano_icon.png", "smooth")
+	local faces = {}
+	for i = 1, 6 do
+		table_insert(faces, CreateMaterial("8800blr_pano_" .. i, "UnlitGeneric", { ["$ignorez"] = 1 }))
+	end
 
 	local function draw()
 		local eyePos, eyeVector = EyePos(), EyeVector()
@@ -88,29 +80,26 @@ local function init()
 
 		-- draw icons
 		if not viewing then
-			render_SetMaterial(mat_icon)
+			render_SetMaterial(icon)
 			for i = PANO_TOTAL, 1, -1 do
 				render_DrawQuadEasy(PANO_DATA[i].pos, -eyeVector, 16, 16, color_white, 180)
 			end
 		end
 
-		-- draw pano
+		-- draw panorama
 		if viewing or focusing then
-			matrix_pano:SetTranslation(eyePos)
-			matrix_pano:SetAngles(closest.ang)
-
-			color_pano.a = viewing and 255 or (time - focusTime) * 255 / FOCUS_LEN
-
-			render_DepthRange(-1, 0)
-			cam_PushModelMatrix(matrix_pano)
+			local csm = ClientsideModel("models/8800blr/panorama.mdl")
+			csm:SetPos(eyePos)
+			csm:SetAngles(closest.ang)
 			local closestIndex = closest.index
 			for i = 1, 6 do
-				mat_pano:SetTexture("$basetexture", string_format("8800blr/pano/%03d_%d", closestIndex - 1, i - 1))
-				render_SetMaterial(mat_pano)
-				render_DrawQuadEasy(norms_pano[i] * -5, norms_pano[i], 10, 10, color_pano, i ~= 1 and i ~= 6 and 180 or 0)
+				faces[i]:SetTexture("$basetexture", string_format("8800blr/pano/%03d_%d", closestIndex - 1, i - 1))
+				csm:SetSubMaterial(i - 1, "!8800blr_pano_" .. i)
 			end
-			cam_PopModelMatrix()
-			render_DepthRange(0, 1)
+			render_SetBlend(viewing and 1 or (time - focusTime) / FOCUS_LEN)
+			csm:DrawModel()
+			render_SetBlend(1)
+			csm:Remove()
 		end
 	end
 
@@ -118,7 +107,5 @@ local function init()
 end
 
 hook.Add("Initialize", "8800blr_pano_init", function()
-	if game.GetMap() == "gm_8800blr" then
-		init()
-	end
+	if game.GetMap() == "gm_8800blr" then init() end
 end)
