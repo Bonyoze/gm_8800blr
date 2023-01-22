@@ -48,6 +48,7 @@ local function init()
 	local oldKey
 	local currKey
 	local lastIndex
+	local shouldDraw
 
 	local iconMat = Material("8800blr/pano_icon.png", "smooth")
 	local panoMats = {}
@@ -56,6 +57,8 @@ local function init()
 	end
 
 	local function draw()
+		if not shouldDraw then return end
+
 		local eyePos, eyeVector = EyePos(), EyeVector()
 		local time = SysTime()
 
@@ -121,6 +124,17 @@ local function init()
 	end
 
 	hook.Add("PostDrawTranslucentRenderables", "8800blr_pano_draw", draw)
+
+	local cvar = CreateClientConVar("8800blr_panoramas", 1, nil, nil, "Show panorama icons in the map", 0, 1)
+	local function cvarCallback()
+		shouldDraw = cvar:GetBool()
+		if not shouldDraw then
+			viewing = false
+			focusing = false
+		end
+	end
+	cvars.AddChangeCallback("8800blr_panoramas", cvarCallback)
+	cvarCallback() -- initialize if should draw panorama icons
 end
 
 hook.Add("Initialize", "8800blr_pano_init", function()
