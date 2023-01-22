@@ -32,6 +32,8 @@ local function init()
 			}
 		end
 
+		f:Close()
+
 		return total, data
 	end
 
@@ -118,7 +120,7 @@ local function init()
 		end
 	end
 
-	hook.Add("PostDrawTranslucentRenderables", "8800blr_drawPano", draw)
+	hook.Add("PostDrawTranslucentRenderables", "8800blr_pano_draw", draw)
 end
 
 hook.Add("Initialize", "8800blr_pano_init", function()
