@@ -9,6 +9,8 @@ local function init()
 	local gui_IsGameUIVisible = gui.IsGameUIVisible
 	local vgui_GetKeyboardFocus = vgui.GetKeyboardFocus
 	local input_IsKeyDown = input.IsKeyDown
+	local input_GetKeyCode = input.GetKeyCode
+	local input_LookupBinding = input.LookupBinding
 	local render_SetMaterial = render.SetMaterial
 	local render_DrawQuadEasy = render.DrawQuadEasy
 	local render_GetColorModulation = render.GetColorModulation
@@ -40,7 +42,6 @@ local function init()
 	local PANO_TOTAL, PANO_DATA = loadData()
 	local FOCUS_LEN = 0.5
 	local FOCUS_DIST = 1000
-	local FOCUS_KEY = KEY_E
 
 	local viewing = false
 	local focusing = false
@@ -67,8 +68,9 @@ local function init()
 		local closest = PANO_DATA[1]
 
 		-- update keys
+		local key = input_LookupBinding("use")
 		oldKey = currKey
-		currKey = input_IsKeyDown(FOCUS_KEY)
+		currKey = key and input_IsKeyDown(input_GetKeyCode(key)) or false
 
 		-- handle viewing/focusing
 		if not viewing then
