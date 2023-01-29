@@ -18,9 +18,14 @@ local function init()
 	local render_SetColorModulation = render.SetColorModulation
 	local render_SetBlend = render.SetBlend
 
+	-- load panorama position and angle info
 	local function loadData()
-		-- panorama position and angle info is stored in its own binary data format
-		local f = file.Open("8800blr/pano.dat.lua", "rb", "LUA")
+		local f = file.Open("data/8800blr/pano_data", "rb", "GAME") -- this file is packed with the map
+
+		if not f then
+			print("Failed to load panorama data for gm_8800blr")
+			return 0, {}
+		end
 
 		local total, data = f:ReadUShort(), {}
 
