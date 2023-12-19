@@ -20,7 +20,7 @@ local function init()
 
 	-- load panorama position and angle info
 	local function loadData()
-		local f = file.Open("data/8800blr/pano_data", "rb", "GAME") -- this file is packed with the map
+		local f = file.Open("data_static/8800blr/pano.dat", "rb", "GAME")
 
 		if not f then
 			print("Failed to load panorama data for gm_8800blr")
